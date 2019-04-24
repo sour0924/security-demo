@@ -71,7 +71,7 @@ public class BrowserSecurityController {
 			logger.info("引发跳转的请求是:"+redirectUrl);
 			//判断是否是后缀html的页面
 			if(StringUtils.endsWithIgnoreCase(redirectUrl, ".html")) {
-				redirectStrategy.sendRedirect(request, response, securityProperties.getBrowserProperties().getLoginPage());
+				redirectStrategy.sendRedirect(request, response, securityProperties.getBrowser().getLoginPage());
 			}
 		}
 		return new SimpleResponse("访问的服务需要身份验证,请引导用户到登录页");

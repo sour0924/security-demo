@@ -1,6 +1,3 @@
-/**
- * 
- */
 package com.hello.security.core.validate.code;
 
 import java.awt.Color;
@@ -14,12 +11,14 @@ import javax.imageio.ImageIO;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.social.connect.web.HttpSessionSessionStrategy;
 import org.springframework.social.connect.web.SessionStrategy;
 import org.springframework.web.bind.ServletRequestUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.context.request.ServletWebRequest;
+import org.springframework.web.context.request.WebRequest;
 
 import com.hello.security.core.properties.SecurityProperties;
 
@@ -34,11 +33,12 @@ public class ValidateCodeController {
 	
 	private SessionStrategy sessionStrategy = new HttpSessionSessionStrategy();
 	
-	private SecurityProperties securityProperties = new SecurityProperties();
+	@Autowired
+	private SecurityProperties securityProperties;
 	
 	@GetMapping("/code/image")
 	public void createCode(HttpServletRequest request,HttpServletResponse response) throws IOException {
-		ImageCode imageCode = createImageCode(request);//创建验证码
+		ImageCode imageCode = createImageCode(new ServletWebRequest(request));//创建验证码
 		sessionStrategy.setAttribute(new ServletWebRequest(request), SESSION_KEY, imageCode);//放入session
 		ImageIO.write(imageCode.getImage(), "JPEG", response.getOutputStream());//写入到响应中
 	}
@@ -48,13 +48,13 @@ public class ValidateCodeController {
 	 * @param request
 	 * @return
 	 */
-	private ImageCode createImageCode(HttpServletRequest request) {
+	private ImageCode createImageCode(ServletWebRequest request) {
 		//宽和高需要从request来取，如果没有传递，再从配置的值来取
         //验证码宽和高
-        //int width = ServletRequestUtils.getIntParameter(request.getRequest(), "width", securityProperties.getCode().getImage().getWidth());
-        //int height = ServletRequestUtils.getIntParameter(request.getRequest(), "height", securityProperties.getCode().getImage().getHeight());
-        int width = 67;
-        int height = 23;
+        int width = ServletRequestUtils.getIntParameter(request.getRequest(), "width", securityProperties.getCode().getImage().getWidth());
+        int height = ServletRequestUtils.getIntParameter(request.getRequest(), "height", securityProperties.getCode().getImage().getHeight());
+        //int width = 100;
+        //int height = 30;
 		BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
         Graphics graphics = image.getGraphics();
         Random random = new Random();
@@ -80,7 +80,7 @@ public class ValidateCodeController {
         }
         graphics.dispose();
         //过期时间
-        return new ImageCode(image, sRand, 60);
+        return new ImageCode(image, sRand, securityProperties.getCode().getImage().getExpireIn());
 	}
 
 	//随机生成背景条纹
