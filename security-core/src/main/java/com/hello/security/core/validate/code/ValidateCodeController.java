@@ -36,9 +36,13 @@ public class ValidateCodeController {
 	@Autowired
 	private SecurityProperties securityProperties;
 	
+	@Autowired
+	private ValidateCodeGenerator imageCodeGenerator;
+	
 	@GetMapping("/code/image")
 	public void createCode(HttpServletRequest request,HttpServletResponse response) throws IOException {
-		ImageCode imageCode = createImageCode(new ServletWebRequest(request));//创建验证码
+		//ImageCode imageCode = createImageCode(new ServletWebRequest(request));//创建验证码
+		ImageCode imageCode = imageCodeGenerator.generate(new ServletWebRequest(request));
 		sessionStrategy.setAttribute(new ServletWebRequest(request), SESSION_KEY, imageCode);//放入session
 		ImageIO.write(imageCode.getImage(), "JPEG", response.getOutputStream());//写入到响应中
 	}
